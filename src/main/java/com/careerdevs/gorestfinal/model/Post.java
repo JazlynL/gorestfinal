@@ -1,11 +1,12 @@
 package com.careerdevs.gorestfinal.model;
 
+import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.rmi.server.UID;
 
-public class PostModel {
+public class Post {
     /*
        id": 1939,
     "user_id": 4097,
@@ -18,5 +19,35 @@ public class PostModel {
     @GeneratedValue(strategy = GenerationType.AUTO )
     private long id;
     private long user_Id;
-    private UID id;
+    private String title;
+    //
+    @Column(length = 512)
+    private String body;
+
+    public long getId() {
+        return id;
+    }
+
+    public long getUser_Id() {
+        return user_Id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    @Override
+    public String
+    toString() {
+        return "Post{" +
+                "id=" + id +
+                ", user_Id=" + user_Id +
+                ", title='" + title + '\'' +
+                ", body='" + body + '\'' +
+                '}';
+    }
 }
