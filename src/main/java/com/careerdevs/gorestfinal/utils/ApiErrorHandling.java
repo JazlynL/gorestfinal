@@ -13,4 +13,22 @@ public class ApiErrorHandling {
         return new ResponseEntity<>(message, status);
     }
 
+    // creating boolean to see whether or not what the user imported is a String.
+    public static boolean isStrNaN(String strNum){
+        //  checking if the user DATA is null.
+        if(strNum == null ){
+            return true;
+        }
+
+        try {
+
+            // parsing the int so it can be output by a String.
+            Integer.parseInt(strNum);
+        } catch (NumberFormatException e) {
+            return true;
+        }
+
+        return false;
+    }
+
 }

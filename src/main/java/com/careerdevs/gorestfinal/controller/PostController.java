@@ -10,20 +10,69 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/posts")
 
 public class PostController {
 
-  //  @GetMapping("/test")
-    // public
-
+  /*
+Required Routes for GoRestSQL Final: complete for each resource; User, Post, Comment, Todo,
+   ^^^* GET route that returns one [resource] by ID from the SQL database
+  ^^^ * GET route that returns all [resource]s stored in the SQL database
+ * DELETE route that deletes one [resource] by ID from SQL database (returns the deleted SQL [resource] data)
+ * DELETE route that deletes all [resource]s from SQL database (returns how many [resource]s were deleted)
+ * POST route that queries one [resource] by ID from GoREST and saves their data to your local database (returns
+the SQL [resource] data)
+ *POST route that uploads all [resource]s from the GoREST API into the SQL database (returns how many
+[resource]s were uploaded)
+ *POST route that create a [resource] on JUST the SQL database (returns the newly created SQL [resource] data)
+ *PUT route that updates a [resource] on JUST the SQL database (returns the updated SQL [resource] data)*/
 
     @Autowired
     PostRepository postRepository;
 
 
+
+    @GetMapping("/{id}")
+
+    public ResponseEntity<?> getUserById(@PathVariable("id") String id ){
+        try{
+
+            if(ApiErrorHandling.isStrNaN(id)){
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, id + "is not a valid ID");
+
+            }
+
+            // parsing the string data and storing it as an int.
+            int uId = Integer.parseInt(id);
+
+
+
+            Optional<Post> foundUser = postRepository.findById((long) uId);
+
+            // a method to check if any users are actually empty.
+            if(foundUser.isEmpty()){
+                throw new HttpClientErrorException(HttpStatus.NOT_FOUND, "No user with this ID is found"+ id);
+            }
+
+
+            return new ResponseEntity<>(foundUser,HttpStatus.OK);
+
+        }  catch(HttpClientErrorException e){
+            return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
+        }catch(Exception e){
+            return ApiErrorHandling.genericApiError(e);
+
+
+
+        }
+
+
+    }
 
     // getting all resources stored in the mySQL database.
     @GetMapping("/all")
