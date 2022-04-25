@@ -29,7 +29,7 @@ Required Routes for GoRestSQL Final: complete for each resource; User, Post, Com
 the SQL [resource] data)
  *POST route that uploads all [resource]s from the GoREST API into the SQL database (returns how many
 [resource]s were uploaded)
- ^^^*POST route that create a [resource] on JUST the SQL database (returns the newly created SQL [resource] data)
+ ^^*POST route that create a [resource] on JUST the SQL database (returns the newly created SQL [resource] data)
  *PUT route that updates a [resource] on JUST the SQL database (returns the updated SQL [resource] data)*/
 
     @Autowired
