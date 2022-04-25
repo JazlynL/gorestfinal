@@ -48,11 +48,11 @@ the SQL [resource] data)
             }
 
             // parsing the string data and storing it as an int.
-            int uId = Integer.parseInt(id);
+            long uId = Long.parseLong(id);
 
 
 
-            Optional<Post> foundUser = postRepository.findById((long) uId);
+            Optional<Post> foundUser = postRepository.findById( uId);
 
             // a method to check if any users are actually empty.
             if(foundUser.isEmpty()){
@@ -117,15 +117,16 @@ the SQL [resource] data)
         }
      // getting all pages with a post request
 
-  /*  @PostMapping ("/uploadall")
+    @PostMapping ("/uploadall")
     public ResponseEntity<?> uploadAll (
             RestTemplate restTemplate
     ) {
         try {
-            String url = "https://gorest.co.in/public/v2/users";
-            ResponseEntity<User[]> response = restTemplate.getForEntity(url, User[].class);
-            User[] firstPageUsers = response.getBody();
-            if (firstPageUsers == null) {
+            // intializing the post
+            String url = "https://gorest.co.in/public/v2/posts";
+            ResponseEntity<Post[]> response = restTemplate.getForEntity(url, Post[].class);
+            Post[] firstPage = response.getBody();
+            if (firstPage == null) {
                 throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to GET first page of " +
                         "users from GoREST");
             }
@@ -151,7 +152,7 @@ the SQL [resource] data)
             return ApiErrorHandling.genericApiError(e);
         }
     }
-*/
+
 
 
 
