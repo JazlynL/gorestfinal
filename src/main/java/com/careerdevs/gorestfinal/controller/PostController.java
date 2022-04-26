@@ -6,12 +6,16 @@ import com.careerdevs.gorestfinal.utils.ApiErrorHandling;
 import com.careerdevs.gorestfinal.validations.PostValidation;
 import com.careerdevs.gorestfinal.validations.ValidationError;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -115,6 +119,8 @@ the SQL [resource] data)
 
 
         }
+
+
      // getting all pages with a post request
 
     @PostMapping ("/uploadall")
@@ -122,15 +128,19 @@ the SQL [resource] data)
             RestTemplate restTemplate
     ) {
         try {
-            // intializing the post
+            // initializing the post
             String url = "https://gorest.co.in/public/v2/posts";
+
+            //response
             ResponseEntity<Post[]> response = restTemplate.getForEntity(url, Post[].class);
+
+            // The getBody() method returns an InputStream from which the response body can be accessed.
             Post[] firstPage = response.getBody();
             if (firstPage == null) {
                 throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to GET first page of " +
                         "users from GoREST");
             }
-            ArrayList<User> allUsers = new ArrayList<>(Arrays.asList(firstPageUsers));
+            ArrayList<Post> allUsers = new ArrayList<>(Arrays.asList(firstPage));
             HttpHeaders responseHeaders = response.getHeaders();
             String totalPages = Objects.requireNonNull(responseHeaders.get("X-Pagination-Pages")).get(0);
             int totalPgNum = Integer.parseInt(totalPages);
