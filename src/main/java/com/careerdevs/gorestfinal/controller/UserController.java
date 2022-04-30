@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import java.util.Optional;
 
 @RestController
@@ -42,7 +43,7 @@ the SQL [resource] data)
     try{
 
         if(BasicUtils.isStrNaN(id)){
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,id +"Not a valid Id.");
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,id +" is not a valid Id.");
         }
 
         int uId = Integer.parseInt(id);
@@ -65,10 +66,8 @@ the SQL [resource] data)
    }
 
 
-    // getting all users
-
+   // getting all users
     @GetMapping("/all")
-
 
     public ResponseEntity<?> getAllUsers(){
         try{
@@ -76,7 +75,6 @@ the SQL [resource] data)
            // will return how many users we have in the database
             Iterable<User> allUsers = userRepository.findAll();
 
-            userRepository.deleteAll();
             return new ResponseEntity<>(allUsers, HttpStatus.OK);
         } catch(HttpClientErrorException e){
             return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
@@ -87,6 +85,47 @@ the SQL [resource] data)
 
 
     }
+
+
+    @DeleteMapping("/{id}")
+
+    public ResponseEntity<?> deleteById(@PathVariable("id") String userId){
+       try{
+           int uID = Integer.parseInt(userId);
+
+           // We are using this line to be able to find the user by Id.
+           //  Confirmation that it exists
+           Optional<User> foundUser = userRepository.findById(uID);
+
+
+           userRepository.deleteById(uID);
+
+           return new ResponseEntity<>(foundUser, HttpStatus.OK);
+
+       }catch(HttpClientErrorException e){
+           return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
+       }
+       catch (Exception e){
+           return ApiErrorHandling.genericApiError(e);
+       }
+
+    }
+
+
+     @DeleteMapping("/deleteall")
+     public ResponseEntity<?> deleteAllUsers(){
+       try {
+           long totalUsers = userRepository.count();
+           userRepository.deleteAll();
+
+           return new ResponseEntity<>("Total users deleted: "+totalUsers, HttpStatus.OK);
+       }catch(HttpClientErrorException e){
+           return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
+       }
+       catch (Exception e){
+           return ApiErrorHandling.genericApiError(e);
+       }
+     }
 
 
 
@@ -114,6 +153,10 @@ the SQL [resource] data)
 
             User savedUser =  userRepository.save(goRestUser);
 
+            if(savedUser == null){
+                throw  new HttpClientErrorException(HttpStatus.NOT_FOUND,"This user is not created");
+            }
+
             return  new ResponseEntity<>(savedUser,HttpStatus.CREATED);
 
 
@@ -123,6 +166,23 @@ the SQL [resource] data)
         catch (Exception e){
             return ApiErrorHandling.genericApiError(e);
         }
+    }
+
+
+
+
+    @PostMapping("/")
+    public ResponseEntity<?>  createUser(@RequestBody User newUser){
+       try{
+           User createdNewUser = userRepository.save(newUser);
+
+           return new ResponseEntity<>(createdNewUser,HttpStatus.CREATED);
+       }catch(HttpClientErrorException e){
+           return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
+       }
+       catch (Exception e){
+           return ApiErrorHandling.genericApiError(e);
+       }
     }
 
 
