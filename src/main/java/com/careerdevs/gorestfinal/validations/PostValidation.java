@@ -40,7 +40,30 @@ public class PostValidation {
         String postTitle = post.getTitle();
         String postBody = post.getBody();
         Long postId = post.getId();
+
+
+
+        // throwing specific errors within these conditionals
+        if (postTitle == null || postTitle.trim().equals("")) {
+            errors.addError("title", "Title can not be left blank");
+        }
+
+        if (postBody == null || postBody.trim().equals("")) {
+            errors.addError("body", "Body can not be left blank");
+        }
+
+        if (postId == 0) {
+            errors.addError("user_id", "User_ID can not be left blank");
+        } else {
+            // is the postUserId connected to an existing user.
+            Optional<Post> foundUser = postRepo.findById(postId);
+
+            if (foundUser.isEmpty()) {
+                errors.addError("user_id", "User_ID is invalid because there is no user found with the id: " + postId);
+            }
+        }
         return errors;
+
 
     }
 }

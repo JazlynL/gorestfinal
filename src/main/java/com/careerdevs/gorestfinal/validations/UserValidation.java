@@ -52,7 +52,7 @@ public class UserValidation {
             Optional<User> foundUser = userRepository.findById(userId);
 
             if (foundUser.isEmpty()) {
-                errors.addError("user_id", "User_ID is invalid because there is no user found with the id: " + postId);
+                errors.addError("user_id", "User_ID is invalid because there is no user found with the id: " + userId);
             }
         }
         return errors;
