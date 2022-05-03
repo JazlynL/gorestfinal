@@ -27,7 +27,7 @@ public class User {
     private String status;
 
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
