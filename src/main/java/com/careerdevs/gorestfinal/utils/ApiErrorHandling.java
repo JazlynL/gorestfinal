@@ -2,7 +2,11 @@ package com.careerdevs.gorestfinal.utils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+
+
 public class ApiErrorHandling {
+//creating a generic class to continually use throughout the code.
+    //takes an Exception as a parameter.
     public static ResponseEntity<?> genericApiError (Exception e) {
         System.out.println(e.getMessage());
         System.out.println(e.getClass());

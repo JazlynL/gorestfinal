@@ -5,6 +5,8 @@ import com.careerdevs.gorestfinal.model.User;
 import com.careerdevs.gorestfinal.repository.UserRepository;
 import com.careerdevs.gorestfinal.utils.ApiErrorHandling;
 import com.careerdevs.gorestfinal.utils.BasicUtils;
+import com.careerdevs.gorestfinal.validations.UserValidation;
+import com.careerdevs.gorestfinal.validations.ValidationError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -127,9 +129,7 @@ the SQL [resource] data)
        }
      }
 
-
-
-    // use path variable
+     // use path variable
     @PostMapping("/upload/{id}")
     public ResponseEntity<?> uploadUserById(@PathVariable("id") String userId, RestTemplate restTemplate){
         try{
@@ -174,6 +174,10 @@ the SQL [resource] data)
     @PostMapping("/")
     public ResponseEntity<?>  createUser(@RequestBody User newUser){
        try{
+
+
+           ValidationError errors = UserValidation.validateUser(newUser,userRepository,false);
+
            User createdNewUser = userRepository.save(newUser);
 
            return new ResponseEntity<>(createdNewUser,HttpStatus.CREATED);

@@ -14,6 +14,8 @@ import javax.persistence.*;
   },
   * */
 
+
+// This entity is used for our repository to recognize that this class can be used as a table
 @Entity
 public class Comment {
 
