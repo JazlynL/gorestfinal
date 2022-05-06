@@ -1,7 +1,6 @@
 package com.careerdevs.gorestfinal.model;
 
 import javax.persistence.*;
-import java.rmi.server.UID;
 
 
 @Entity
@@ -17,18 +16,30 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO )
     private long id;
-    private long user_Id;
+    private long user_id;
     private String title;
     //
     @Column(length = 512)
     private String body;
 
+
+    public Post() {
+
+    }
+
+    public Post(long id, long user_Id, String title, String body) {
+        this.id = id;
+        this.user_id = user_Id;
+        this.title = title;
+        this.body = body;
+    }
+
     public long getId() {
         return id;
     }
 
-    public long getUser_Id() {
-        return user_Id;
+    public long getUser_id() {
+        return user_id;
     }
 
     public String getTitle() {
@@ -44,7 +55,7 @@ public class Post {
     toString() {
         return "Post{" +
                 "id=" + id +
-                ", user_Id=" + user_Id +
+                ", user_Id=" + user_id +
                 ", title='" + title + '\'' +
                 ", body='" + body + '\'' +
                 '}';
