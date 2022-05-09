@@ -1,6 +1,7 @@
 package com.careerdevs.gorestfinal.controller;
 
 
+import com.careerdevs.gorestfinal.model.Comment;
 import com.careerdevs.gorestfinal.model.User;
 import com.careerdevs.gorestfinal.repository.UserRepository;
 import com.careerdevs.gorestfinal.utils.ApiErrorHandling;
@@ -8,6 +9,7 @@ import com.careerdevs.gorestfinal.utils.BasicUtils;
 import com.careerdevs.gorestfinal.validations.UserValidation;
 import com.careerdevs.gorestfinal.validations.ValidationError;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,9 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -169,6 +174,65 @@ the SQL [resource] data)
     }
 
 
+    @PostMapping("/uploadall")
+
+
+    public ResponseEntity <?>  uploadAllUsers(RestTemplate restTemplate){
+        // initializing the post to the Url variable
+        String url = "https://gorest.co.in/public/v2/comments";
+
+        //response,  we are using the getForEntity()
+        // method of the RestTemplate class to invoke the API and get the response as a JSON string
+        ResponseEntity<User> response = restTemplate.getForEntity(url, User.class);
+
+        //The getBody() method returns an InputStream from which the response body can be accessed.
+        User firstPage = response.getBody();
+
+        //if its null it  will throw an exception error
+        if (firstPage == null) {
+            throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to GET first page of " +
+                    "posts from GoREST");
+        }
+
+
+        // Creating an Array List and storing the first Page.
+        ArrayList<User> allUsers = new ArrayList<>(Arrays.asList(firstPage));
+
+        //using the response variable , and getting the HTTP Headers
+        HttpHeaders responseHeaders = response.getHeaders();
+
+
+        //Creating a STRING variable and initializing it to the Objects class we are e
+        String totalPages = Objects.requireNonNull(responseHeaders.get("X-Pagination-Pages")).get(0);
+
+        // using parse to take the total page num.
+        int totalPgNum = Integer.parseInt(totalPages);
+
+
+        // to iterate through the pages.we set it at 2 to get the following page.
+        for (int i = 2; i <= totalPgNum; i++) {
+            // grabbing the url and making a query of it
+            String pageUrl = url + "?page=" + i;
+
+            //
+            User pageUsers = restTemplate.getForObject(pageUrl, User.class);
+
+            // setting the conditional for the exception thrown. if page of users is null
+            if (pageUsers == null) {
+                throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to GET page " + i  +
+                        " of users from GoREST");
+            }
+
+
+            allUsers.addAll(Arrays.asList(firstPage));
+        }
+        //upload all users to SQL
+        userRepository.saveAll(allUsers);
+
+
+        return  new ResponseEntity <> ("Succesully uploaded all users"+ allUsers.size(),HttpStatus.CREATED);
+    }
+
 
 
     @PostMapping("/")
@@ -178,9 +242,38 @@ the SQL [resource] data)
 
            ValidationError errors = UserValidation.validateUser(newUser,userRepository,false);
 
+           if(errors.hasError()){
+
+               throw  new HttpClientErrorException(HttpStatus.BAD_REQUEST,"This has errors in the request");
+           }
+
            User createdNewUser = userRepository.save(newUser);
 
            return new ResponseEntity<>(createdNewUser,HttpStatus.CREATED);
+       }catch(HttpClientErrorException e){
+           return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
+       }
+       catch (Exception e){
+           return ApiErrorHandling.genericApiError(e);
+       }
+    }
+
+
+
+    @PutMapping
+
+    public ResponseEntity<?> updateUser(@RequestBody User updateUser){
+       try{
+           ValidationError errors = UserValidation.validateUser(updateUser, userRepository, true);
+
+           if(errors.hasError()){
+               throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, " You are not able to update this user");
+           }
+
+           User updatedUser = userRepository.save(updateUser);
+
+           return new ResponseEntity<>(updatedUser,HttpStatus.CREATED);
+
        }catch(HttpClientErrorException e){
            return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
        }

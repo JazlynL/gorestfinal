@@ -187,7 +187,7 @@ the SQL [resource] data)
             // parsing the user ID
             int uId = Integer.parseInt(id);
 
-            String url = "https://gorest.co.in/public/v2/posts"+ uId;
+            String url = "https://gorest.co.in/public/v2/posts/"+ uId;
 
 
             // we are using the BasicUtils to determine whether or not its a string
