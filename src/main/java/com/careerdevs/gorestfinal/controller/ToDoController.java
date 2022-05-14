@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/todo")
+@RequestMapping("/api/todos")
 
 public class ToDoController {
 
@@ -186,10 +186,10 @@ public ResponseEntity<?> getAllToDos(){
         String url = "https://gorest.co.in/public/v2/todos";
 
         //response
-        ResponseEntity<ToDos> response = restTemplate.getForEntity(url, ToDos.class);
+        ResponseEntity<ToDos[]> response = restTemplate.getForEntity(url, ToDos[].class);
 
         //The getBody() method returns an InputStream from which the response body can be accessed.
-        ToDos firstPage = response.getBody();
+        ToDos[] firstPage = response.getBody();
 
         //if its null it  will throw an exception error
         if (firstPage == null) {
@@ -214,11 +214,12 @@ public ResponseEntity<?> getAllToDos(){
 
         // to iterate through the pages.
         for (int i = 2; i <= totalPgNum; i++) {
+
             // grabbing the url and making a query of it
             String pageUrl = url + "?page=" + i;
 
             //
-            ToDos pageUsers = restTemplate.getForObject(pageUrl, ToDos.class);
+            ToDos[] pageUsers = restTemplate.getForObject(pageUrl, ToDos[].class);
 
             // setting the conditional for the exception thrown.
             if (pageUsers == null) {
@@ -250,7 +251,7 @@ public ResponseEntity<?> getAllToDos(){
         ValidationError errors = ToDosValidation.validateToDO(toDosUser, toDoRepository,false);
 
         if(errors.hasError()){
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST," Id  ");
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, errors.toJSONobject());
         }
 
         ToDos createdToDo = toDoRepository.save(toDosUser);
