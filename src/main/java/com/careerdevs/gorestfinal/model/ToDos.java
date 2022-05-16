@@ -1,6 +1,8 @@
 package com.careerdevs.gorestfinal.model;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -15,27 +17,34 @@ public class ToDos {
             "due_on": "2022-05-25T00:00:00.000+05:30",
             "status": "completed"*/
     @Id
-@GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-    private long userId;
+
+
+    @JsonProperty("user_id")
+    private long user_id;
+
     private String title;
-    private Date dueOn;
+
+    @JsonProperty("due_on")
+    private String due_on;
+
     private String status;
 
     public long getId() {
         return id;
     }
 
-    public long getUserId() {
-        return userId;
+    public long getUser_id() {
+        return user_id;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public Date getDueOn() {
-        return dueOn;
+    public String getDue_on() {
+        return due_on;
     }
 
     public String getStatus() {
@@ -46,8 +55,9 @@ public class ToDos {
     public String toString() {
         return "ToDos{" +
                 "id=" + id +
-                ", userId=" + userId +
+                ", user_id=" + user_id +
                 ", title='" + title + '\'' +
+                ", due_on=" + due_on +
                 ", status='" + status + '\'' +
                 '}';
     }
