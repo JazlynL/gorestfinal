@@ -1,7 +1,9 @@
 package com.careerdevs.gorestfinal.controller;
 
 import com.careerdevs.gorestfinal.model.Post;
+import com.careerdevs.gorestfinal.model.User;
 import com.careerdevs.gorestfinal.repository.PostRepository;
+import com.careerdevs.gorestfinal.repository.UserRepository;
 import com.careerdevs.gorestfinal.utils.ApiErrorHandling;
 import com.careerdevs.gorestfinal.utils.BasicUtils;
 import com.careerdevs.gorestfinal.validations.PostValidation;
@@ -14,10 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -39,7 +38,10 @@ the SQL [resource] data)
 
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private UserRepository userRepository;
 
+    String postUrl = "https://gorest.co.in/public/v2/posts/";
 
 
     @GetMapping("/{id}")
@@ -137,7 +139,7 @@ the SQL [resource] data)
 
            postRepository.deleteAll();
 
-           return new ResponseEntity<Long>(totalAmountPost, HttpStatus.OK);
+           return new ResponseEntity<>(totalAmountPost, HttpStatus.OK);
 
        } catch(HttpClientErrorException e){
            return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
@@ -158,7 +160,7 @@ the SQL [resource] data)
              try {
 
 
-                 ValidationError errors = PostValidation.validatePost(newPost,postRepository, false);
+                 ValidationError errors = PostValidation.validatePost(newPost,postRepository,userRepository, false);
 
                  if(errors.hasError() ){
                      throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, errors.toJSONobject());
@@ -187,7 +189,7 @@ the SQL [resource] data)
             // parsing the user ID
             int uId = Integer.parseInt(id);
 
-            String url = "https://gorest.co.in/public/v2/posts/"+ uId;
+            String url = postUrl + uId;
 
 
             // we are using the BasicUtils to determine whether or not its a string
@@ -206,6 +208,12 @@ the SQL [resource] data)
             if(foundedPost == null){
                 throw  new HttpClientErrorException(HttpStatus.NOT_FOUND, id + "User id not found" );
             }
+
+          /*  Iterable<User> allPosts = userRepository.findAll();
+            List<User> result = new ArrayList<User>();
+            allPosts.forEach(result::add);
+            long randomId = result.get((int) (result.size()* Math.random())).getId();
+            foundedPost.setUser_id(randomId);*/
 
             Post savedPost =  postRepository.save(foundedPost);
             return  new ResponseEntity<>(savedPost,HttpStatus.CREATED);
@@ -229,7 +237,7 @@ the SQL [resource] data)
     ) {
         try {
             // initializing the post to the Url variable
-            String url = "https://gorest.co.in/public/v2/posts";
+            String url = postUrl;
 
             //response
             ResponseEntity<Post[]> response = restTemplate.getForEntity(url, Post[].class);
@@ -240,7 +248,7 @@ the SQL [resource] data)
             //if its null it  will throw an exception error
             if (firstPage == null) {
                 throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to GET first page of " +
-                        "posts from GoREST");
+                        postUrl + "posts from GoREST");
             }
 
 
@@ -297,7 +305,7 @@ the SQL [resource] data)
         try{
 
             // instead of using false we will be using true to update the user info in our database.
-            ValidationError errors = PostValidation.validatePost(updateUser ,postRepository,true);
+            ValidationError errors = PostValidation.validatePost(updateUser ,postRepository,userRepository,true);
 
             // using this method to see if the errors were checked.
 
