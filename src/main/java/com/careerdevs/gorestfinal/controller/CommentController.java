@@ -3,7 +3,11 @@ package com.careerdevs.gorestfinal.controller;
 
 import com.careerdevs.gorestfinal.model.Comment;
 import com.careerdevs.gorestfinal.model.Post;
+import com.careerdevs.gorestfinal.model.Post;
+import com.careerdevs.gorestfinal.model.User;
 import com.careerdevs.gorestfinal.repository.CommentRepository;
+import com.careerdevs.gorestfinal.repository.PostRepository;
+import com.careerdevs.gorestfinal.repository.UserRepository;
 import com.careerdevs.gorestfinal.utils.ApiErrorHandling;
 import com.careerdevs.gorestfinal.utils.BasicUtils;
 import com.careerdevs.gorestfinal.validations.CommentValidation;
@@ -17,10 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/comments")
@@ -41,6 +42,10 @@ the SQL [resource] data)
 
     @Autowired
     private CommentRepository commentRepository;
+
+
+    @Autowired
+    private PostRepository postRepository;
 
 
      @GetMapping("/{id}")
@@ -169,6 +174,14 @@ the SQL [resource] data)
                   throw new HttpClientErrorException(HttpStatus.NOT_FOUND, id + "  This seems to be empty");
               }
 
+             Iterable<Post> allPosts = postRepository.findAll();
+             List<Post> result = new ArrayList<Post>();
+             for(Post posts : allPosts ){
+                 result.add(posts);
+             }
+             long randomId = result.get((int) (result.size()* Math.random())).getId();
+             uploadedComments.setPost_id(randomId);
+
 
               commentRepository.save(uploadedComments);
 
@@ -196,10 +209,10 @@ the SQL [resource] data)
 
              //response,  we are using the getForEntity()
              // method of the RestTemplate class to invoke the API and get the response as a JSON string
-             ResponseEntity<Comment> response = restTemplate.getForEntity(url, Comment.class);
+             ResponseEntity<Comment[]> response = restTemplate.getForEntity(url, Comment[].class);
 
              //The getBody() method returns an InputStream from which the response body can be accessed.
-             Comment firstPage = response.getBody();
+             Comment[] firstPage = response.getBody();
 
              //if its null it  will throw an exception error
              if (firstPage == null) {
@@ -228,22 +241,35 @@ the SQL [resource] data)
                  String pageUrl = url + "?page=" + i;
 
                  //
-                 Comment pageUsers = restTemplate.getForObject(pageUrl, Comment.class);
+                 Comment[] pageComments = restTemplate.getForObject(pageUrl, Comment[].class);
 
                  // setting the conditional for the exception thrown. if page of users is null
-                 if (pageUsers == null) {
+                 if (pageComments == null) {
                      throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to GET page " + i  +
                              " of users from GoREST");
                  }
 
 
-                 allUsers.addAll(Arrays.asList(firstPage));
+                 allUsers.addAll(Arrays.asList(pageComments));
+             }
+
+             Iterable<Post> allPost = postRepository.findAll();
+             List<Post> result = new ArrayList<Post>();
+
+             for(Post post : allPost ){
+                 result.add(post);
+             }
+
+
+             for(Post post: allPost){
+                 long randomId = result.get((int) (result.size()* Math.random())).getId();
+                 post.setUser_id(randomId);
              }
              //upload all users to SQL
              commentRepository.saveAll(allUsers);
 
 
-             return  new ResponseEntity <> ("Succesully uploaded all users"+ allUsers.size(),HttpStatus.CREATED);
+             return  new ResponseEntity <> ("Successfully uploaded all users"+ allUsers.size(),HttpStatus.CREATED);
 
          }catch(HttpClientErrorException e){
              return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
@@ -260,7 +286,7 @@ the SQL [resource] data)
     public  ResponseEntity<?> uploadComment(@RequestBody Comment comment){
 
          try{
-             ValidationError errors = CommentValidation.commentValidation(comment,commentRepository, false);
+             ValidationError errors = CommentValidation.commentValidation(comment,commentRepository, postRepository, false);
 
              if(errors.hasError()){
                  throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, errors.toJSONobject());
@@ -282,7 +308,7 @@ the SQL [resource] data)
 
     public ResponseEntity<?> updateComment(@RequestBody Comment updateComment){
          try{
-             ValidationError errors = CommentValidation.commentValidation(updateComment,commentRepository, true);
+             ValidationError errors = CommentValidation.commentValidation(updateComment,commentRepository,postRepository, true);
              if(errors.hasError()){
                  throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, errors.toJSONobject());
              }

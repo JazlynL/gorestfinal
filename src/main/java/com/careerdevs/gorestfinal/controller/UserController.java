@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/users")
 public class UserController {
      /*
 Required Routes for GoRestSQL Final: complete for each resource; User, Post, Comment, Todo,
@@ -53,14 +53,14 @@ the SQL [resource] data)
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,id +" is not a valid Id.");
         }
 
-        int uId = Integer.parseInt(id);
+        long uID = Long.parseLong(id);
 
 
-        Optional<User> foundUser = userRepository.findById(uId);
+        Optional<User> foundUser = userRepository.findById(uID);
 
 
         if(foundUser.isEmpty()){
-            throw  new HttpClientErrorException(HttpStatus.NOT_FOUND, uId + "User Id not found");
+            throw  new HttpClientErrorException(HttpStatus.NOT_FOUND, uID + "User Id not found");
         }
 
         return new ResponseEntity<>(foundUser, HttpStatus.OK);
@@ -98,7 +98,7 @@ the SQL [resource] data)
 
     public ResponseEntity<?> deleteById(@PathVariable("id") String userId){
        try{
-           int uID = Integer.parseInt(userId);
+           long uID = Long.parseLong(userId);
 
            // We are using this line to be able to find the user by Id.
            //  Confirmation that it exists
@@ -179,14 +179,14 @@ the SQL [resource] data)
 
     public ResponseEntity <?>  uploadAllUsers(RestTemplate restTemplate){
         // initializing the post to the Url variable
-        String url = "https://gorest.co.in/public/v2/comments";
+        String url = "https://gorest.co.in/public/v2/users";
 
         //response,  we are using the getForEntity()
         // method of the RestTemplate class to invoke the API and get the response as a JSON string
-        ResponseEntity<User> response = restTemplate.getForEntity(url, User.class);
+        ResponseEntity<User[]> response = restTemplate.getForEntity(url, User[].class);
 
         //The getBody() method returns an InputStream from which the response body can be accessed.
-        User firstPage = response.getBody();
+        User[] firstPage = response.getBody();
 
         //if its null it  will throw an exception error
         if (firstPage == null) {
@@ -215,7 +215,7 @@ the SQL [resource] data)
             String pageUrl = url + "?page=" + i;
 
             //
-            User pageUsers = restTemplate.getForObject(pageUrl, User.class);
+            User[] pageUsers = restTemplate.getForObject(pageUrl, User[].class);
 
             // setting the conditional for the exception thrown. if page of users is null
             if (pageUsers == null) {
@@ -224,13 +224,13 @@ the SQL [resource] data)
             }
 
 
-            allUsers.addAll(Arrays.asList(firstPage));
+            allUsers.addAll(Arrays.asList(pageUsers));
         }
         //upload all users to SQL
         userRepository.saveAll(allUsers);
 
 
-        return  new ResponseEntity <> ("Succesully uploaded all users"+ allUsers.size(),HttpStatus.CREATED);
+        return  new ResponseEntity <> ("Succesully uploaded all users "+ allUsers.size(),HttpStatus.CREATED);
     }
 
 
@@ -244,7 +244,7 @@ the SQL [resource] data)
 
            if(errors.hasError()){
 
-               throw  new HttpClientErrorException(HttpStatus.BAD_REQUEST,"This has errors in the request");
+               throw  new HttpClientErrorException(HttpStatus.BAD_REQUEST,errors.toJSONobject());
            }
 
            User createdNewUser = userRepository.save(newUser);

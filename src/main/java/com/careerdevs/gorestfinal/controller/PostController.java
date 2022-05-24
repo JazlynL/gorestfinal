@@ -209,11 +209,26 @@ the SQL [resource] data)
                 throw  new HttpClientErrorException(HttpStatus.NOT_FOUND, id + "User id not found" );
             }
 
-          /*  Iterable<User> allPosts = userRepository.findAll();
+          /*  Iterable<User> allUsers = userRepository.findAll();
             List<User> result = new ArrayList<User>();
-            allPosts.forEach(result::add);
+
+            method reference operator ::
+                        allPosts.forEach(result::add);
             long randomId = result.get((int) (result.size()* Math.random())).getId();
             foundedPost.setUser_id(randomId);*/
+
+
+            Iterable<User> allUsers = userRepository.findAll();
+            List<User> result = new ArrayList<User>();
+
+            for(User user : allUsers ){
+                result.add(user);
+            }
+
+            long randomId = result.get((int) (result.size()* Math.random())).getId();
+            foundedPost.setUser_id(randomId);
+
+
 
             Post savedPost =  postRepository.save(foundedPost);
             return  new ResponseEntity<>(savedPost,HttpStatus.CREATED);
@@ -253,7 +268,7 @@ the SQL [resource] data)
 
 
             // Creating an Array List and storing the first Page.
-            ArrayList<Post> allUsers = new ArrayList<>(Arrays.asList(firstPage));
+            ArrayList<Post> allPost = new ArrayList<>(Arrays.asList(firstPage));
 
             //using the response variable , and getting the HTTP Headers
             HttpHeaders responseHeaders = response.getHeaders();
@@ -272,20 +287,34 @@ the SQL [resource] data)
                 String pageUrl = url + "?page=" + i;
 
                 //
-                Post[] pageUsers = restTemplate.getForObject(pageUrl, Post[].class);
+                Post[] pagePost = restTemplate.getForObject(pageUrl, Post[].class);
 
                 // setting the conditional for the exception thrown.
-                if (pageUsers == null) {
+                if (pagePost == null) {
                     throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to GET page " + i  +
                             " of users from GoREST");
                 }
-                allUsers.addAll(Arrays.asList(firstPage));
+                allPost.addAll(Arrays.asList(pagePost));
             }
+
+            Iterable<User> allUsers = userRepository.findAll();
+            List<User> result = new ArrayList<User>();
+
+            for(User user : allUsers ){
+                result.add(user);
+            }
+
+
+            for(Post post: allPost){
+                long randomId = result.get((int) (result.size()* Math.random())).getId();
+                post.setUser_id(randomId);
+            }
+
             //upload all users to SQL
-            postRepository.saveAll(allUsers);
+            postRepository.saveAll(allPost);
 
 
-            return new ResponseEntity<>("Users Created: " + allUsers.size(), HttpStatus.OK);
+            return new ResponseEntity<>("Users Created: " + allPost.size(), HttpStatus.OK);
         } catch (HttpClientErrorException e) {
             return ApiErrorHandling.customApiError(e.getMessage(), e.getStatusCode());
         } catch (Exception e) {

@@ -3,7 +3,9 @@ package com.careerdevs.gorestfinal.controller;
 import com.careerdevs.gorestfinal.model.Comment;
 import com.careerdevs.gorestfinal.model.Post;
 import com.careerdevs.gorestfinal.model.ToDos;
+import com.careerdevs.gorestfinal.model.User;
 import com.careerdevs.gorestfinal.repository.ToDoRepository;
+import com.careerdevs.gorestfinal.repository.UserRepository;
 import com.careerdevs.gorestfinal.utils.ApiErrorHandling;
 import com.careerdevs.gorestfinal.utils.BasicUtils;
 import com.careerdevs.gorestfinal.validations.ToDosValidation;
@@ -16,10 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/todos")
@@ -29,6 +28,9 @@ public class ToDoController {
 
     @Autowired
     private ToDoRepository toDoRepository;
+
+    @Autowired
+    private UserRepository userRepository;
  /*
 Required Routes for GoRestSQL Final: complete for each resource; User, Post, Comment, Todo,
    ^^^* GET route that returns one [resource] by ID from the SQL database
@@ -144,7 +146,7 @@ public ResponseEntity<?> getAllToDos(){
     }
 }
 
-@PostMapping("/{id}")
+@PostMapping("/upload/{id}")
     public  ResponseEntity<?> toDoById(@PathVariable ("id") String id, RestTemplate restTemplate){
     try{
 
@@ -162,6 +164,14 @@ public ResponseEntity<?> getAllToDos(){
         if(foundToDo == null){
             throw new HttpClientErrorException(HttpStatus.NOT_FOUND,"No user at this ID");
         }
+        Iterable<User> allUsers = userRepository.findAll();
+        List<User> result = new ArrayList<User>();
+
+        for(User user : allUsers ){
+            result.add(user);
+        }
+        long randomId = result.get((int) (result.size()* Math.random())).getId();
+        foundToDo.setUser_id(randomId);
 
         ToDos savedId = toDoRepository.save(foundToDo);
 
@@ -199,7 +209,7 @@ public ResponseEntity<?> getAllToDos(){
 
 
         // Creating an Array List and storing the first Page.
-        ArrayList<ToDos> allUsers = new ArrayList<>(Arrays.asList(firstPage));
+        ArrayList<ToDos> allTodos = new ArrayList<>(Arrays.asList(firstPage));
 
         //using the response variable , and getting the HTTP Headers
         HttpHeaders responseHeaders = response.getHeaders();
@@ -219,20 +229,33 @@ public ResponseEntity<?> getAllToDos(){
             String pageUrl = url + "?page=" + i;
 
             //
-            ToDos[] pageUsers = restTemplate.getForObject(pageUrl, ToDos[].class);
+            ToDos[] toDoPage = restTemplate.getForObject(pageUrl, ToDos[].class);
 
             // setting the conditional for the exception thrown.
-            if (pageUsers == null) {
+            if (toDoPage == null) {
                 throw new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to GET page " + i  +
                         " of users from GoREST");
             }
-            allUsers.addAll(Arrays.asList(firstPage));
+            allTodos.addAll(Arrays.asList(toDoPage));
+        }
+
+        Iterable<User> users = userRepository.findAll();
+        List<User> result = new ArrayList<User>();
+
+        for(User user : users ){
+            result.add(user);
+        }
+
+
+        for(ToDos toDos : allTodos){
+            long randomId = result.get((int) (result.size()* Math.random())).getId();
+            toDos.setUser_id(randomId);
         }
         //upload all users to SQL
-        toDoRepository.saveAll(allUsers);
+        toDoRepository.saveAll(allTodos);
 
 
-        return new ResponseEntity<>("Users Created: " + allUsers.size(), HttpStatus.OK);
+        return new ResponseEntity<>("Users Created: " + allTodos.size(), HttpStatus.OK);
     }catch(HttpClientErrorException e){
 
 
@@ -248,7 +271,7 @@ public ResponseEntity<?> getAllToDos(){
 
     public ResponseEntity<?>  toDosUpload(@RequestBody ToDos toDosUser){
     try{
-        ValidationError errors = ToDosValidation.validateToDO(toDosUser, toDoRepository,false);
+        ValidationError errors = ToDosValidation.validateToDO(toDosUser, toDoRepository,userRepository,false);
 
         if(errors.hasError()){
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, errors.toJSONobject());
@@ -278,7 +301,7 @@ public ResponseEntity<?> getAllToDos(){
     public ResponseEntity<?> updateToDos(@RequestBody ToDos updateToDo){
     try{
 
-        ValidationError errors = ToDosValidation.validateToDO(updateToDo,toDoRepository, true);
+        ValidationError errors = ToDosValidation.validateToDO(updateToDo,toDoRepository, userRepository,true);
         if(errors.hasError()){
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Id couldn't be updated.");
         }
